@@ -1,8 +1,9 @@
 import streamlit as st
 import tensorflow as tf
 import numpy as np
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import time
+import io
 
 # ================================
 # 🎨 Page Configuration
@@ -14,7 +15,6 @@ st.set_page_config(page_title="🐱🐶 Cat vs Dog Classifier", page_icon="🐾"
 # ================================
 st.markdown("""
     <style>
-    /* Background gradient */
     [data-testid="stAppViewContainer"] {
         background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
         animation: gradientShift 8s ease infinite;
@@ -27,7 +27,6 @@ st.markdown("""
         100% {background-position: 0% 50%;}
     }
 
-    /* Title styling */
     h1 {
         text-align: center;
         font-family: 'Poppins', sans-serif;
@@ -35,7 +34,6 @@ st.markdown("""
         text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
     }
 
-    /* Upload box */
     .uploadedFile {
         border-radius: 15px;
         background-color: rgba(255,255,255,0.2);
@@ -43,7 +41,6 @@ st.markdown("""
         margin-top: 1rem;
     }
 
-    /* Image display */
     .img-container {
         display: flex;
         justify-content: center;
@@ -59,7 +56,6 @@ st.markdown("""
         transform: scale(1.05);
     }
 
-    /* Result text */
     .result {
         text-align: center;
         font-size: 1.6rem;
@@ -69,7 +65,6 @@ st.markdown("""
         margin-top: 15px;
     }
 
-    /* Footer */
     footer {
         text-align: center;
         color: rgba(255,255,255,0.8);
@@ -111,44 +106,58 @@ st.title("🐾 Cat vs Dog Classifier")
 uploaded_file = st.file_uploader("📸 Upload an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    st.markdown('<div class="uploadedFile">', unsafe_allow_html=True)
-    image = Image.open(uploaded_file)
-    st.markdown('<div class="img-container">', unsafe_allow_html=True)
-    st.image(image, caption="Uploaded Image", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    try:
+        # Read and open image safely
+        image_bytes = uploaded_file.read()
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
-    # Animation before prediction
-    with st.spinner("✨ Analyzing your image..."):
-        progress_text = "🔍 Processing..."
-        my_bar = st.progress(0, text=progress_text)
-        for percent_complete in range(100):
-            time.sleep(0.02)
-            my_bar.progress(percent_complete + 1, text=progress_text)
-        time.sleep(0.5)
+        st.markdown('<div class="uploadedFile">', unsafe_allow_html=True)
+        st.markdown('<div class="img-container">', unsafe_allow_html=True)
+        st.image(image, caption="Uploaded Image", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        predicted_class, confidence = predict_image(image)
-        my_bar.empty()
+        # Animation before prediction
+        with st.spinner("✨ Analyzing your image..."):
+            progress_text = "🔍 Processing..."
+            my_bar = st.progress(0, text=progress_text)
+            for percent_complete in range(100):
+                time.sleep(0.02)
+                my_bar.progress(percent_complete + 1, text=progress_text)
+            time.sleep(0.5)
 
-    # Result Display with Animation
-    st.markdown(f"""
-        <div class="result">
-            ✅ Prediction: <b>{predicted_class}</b><br>
-            💯 Confidence: <b>{confidence * 100:.2f}%</b>
-        </div>
-    """, unsafe_allow_html=True)
+            predicted_class, confidence = predict_image(image)
+            my_bar.empty()
 
-    if predicted_class == "Cat":
-        st.balloons()
-    else:
-        st.snow()
+        # Result Display with Animation
+        st.markdown(f"""
+            <div class="result">
+                ✅ Prediction: <b>{predicted_class}</b><br>
+                💯 Confidence: <b>{confidence * 100:.2f}%</b>
+            </div>
+        """, unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        if predicted_class == "Cat":
+            st.balloons()
+        else:
+            st.snow()
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    except UnidentifiedImageError:
+        st.error("⚠️ The uploaded file is not a valid image. Please upload a JPG or PNG.")
+    except Exception as e:
+        st.error(f"❌ Unexpected error: {e}")
+
+else:
+    st.info("👆 Upload an image to get started.")
 
 # ================================
 # 🌟 Footer
 # ================================
 st.markdown("""
     <footer>
-        Made by ❤️  <b>Syed Ahamed Ali</b> 
+        Made with ❤️ by <b>Syed Ahamed Ali</b>
     </footer>
 """, unsafe_allow_html=True)
+
+
