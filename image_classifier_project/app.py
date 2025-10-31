@@ -113,7 +113,7 @@ if uploaded_file is not None:
 
         st.markdown('<div class="uploadedFile">', unsafe_allow_html=True)
         st.markdown('<div class="img-container">', unsafe_allow_html=True)
-        st.image(image, caption="Uploaded Image", use_container_width=True)
+        st.image(image, caption="Uploaded Image", use_column_width=True)  # ✅ FIXED HERE
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Animation before prediction
@@ -159,5 +159,4 @@ st.markdown("""
         Made with ❤️ by <b>Syed Ahamed Ali</b>
     </footer>
 """, unsafe_allow_html=True)
-
 
